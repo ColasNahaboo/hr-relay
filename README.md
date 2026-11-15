@@ -88,13 +88,17 @@ was developed against.
 
 ## Service
 
-Runs as a systemd user service (**disabled by default** — see "Coexistence"
-below for why):
+Runs as a systemd user service. If you only ever connect to the strap through
+the relay (recommended when the direct path is broken), run it permanently:
 
-    systemctl --user start hr-relay     # enable and hold the strap
-    systemctl --user disable --now hr-relay  # stand down again
+    systemctl --user enable --now hr-relay   # run at boot and now
+    systemctl --user disable --now hr-relay  # stand down and free the strap
     journalctl --user -u hr-relay -f
     systemctl --user restart hr-relay   # after code changes, or if advertising stalls
+
+It needs no login session to stay up (systemd user lingering), and it survives
+the strap sleeping: it keeps advertising and re-acquires the strap whenever it
+wakes up.
 
 ## Why it fixes the buggy-device case
 
@@ -121,8 +125,8 @@ browser connects to the strap directly and subscribes, the strap stops
 notifying the relay (and vice versa). With the relay running, its staleness
 watchdog then drops and re-subscribes every ~60 s, which would rip the stream
 away from a direct connection mid-workout. So run **either** the relay **or** a
-direct app-to-strap connection, never both. That is why the service ships
-disabled; start it only when the direct path is broken.
+direct app-to-strap connection, never both — and always pick **HR RELAY** in
+the browser's device chooser, never the raw strap, while the relay runs.
 
 ## AI Co-Design Disclosure
 
