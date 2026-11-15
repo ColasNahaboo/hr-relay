@@ -123,3 +123,8 @@ watchdog then drops and re-subscribes every ~60 s, which would rip the stream
 away from a direct connection mid-workout. So run **either** the relay **or** a
 direct app-to-strap connection, never both. That is why the service ships
 disabled; start it only when the direct path is broken.
+
+## License
+
+MIT License - (c) 2026 Colas Nahaboo.
+In a nutshell: do whatever you want with this, credit me if you please, but expect no warranty.
