@@ -47,6 +47,30 @@ unchanged, because the forwarded bytes are the strap's own.
 The relay advertises continuously and reconnects to the strap automatically,
 e.g. after you take it off and put it back on.
 
+### Validated on the affected Chrome 157 build (2026-11-15)
+
+This is the only method that has worked every time on the affected Chrome
+builds. The phone's `startNotifications` completes (`onDescriptorWrite
+status:0`) because the phone only ever talks to the relay's single clean
+`0x2A37` characteristic — Chrome's broken vendor-notification path is never
+exercised.
+
+1. Pick **HR RELAY** → the app subscribes and shows `--` (no heart rate yet).
+2. Put the strap on and wear it. The relay's BlueZ link comes up, it starts
+   forwarding, and the heart rate appears live with no further action.
+
+The `--` in step 1 is correct, not a failure: the relay forwards only real
+measurements, so there is nothing to show until the strap is worn.
+
+## Why it fixes the Chrome 157 regression
+
+Chrome 157 wedges `startNotifications` on this band because the band streams
+notifications on vendor-service characteristics Chrome has no wrapper for; each
+one throws in Chrome's GATT layer and stalls its per-device queue, so the
+`0x2A37` CCCD write is never acknowledged. The relay presents a single standard
+`0x2A37` characteristic and nothing else, so that path is never hit. See
+`walkpadspeed/docs/bugreport-google-chrome-v157.md` for the full trace.
+
 ## Coexistence (2026-11-14)
 
 The strap streams to exactly **one central at a time**: when the phone's
