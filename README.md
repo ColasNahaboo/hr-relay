@@ -1,6 +1,7 @@
 # hr-relay
 
-<img src="docs/banner-full-small.jpeg" align="right" width="480">I have an heart monitoring armband by COROS, that use via a simple html connecting to it via Google Chrome bluetooth BLE layer. But the armband had a bug that was ignored by Google Chrome up to now, but is not blocking with its version 157 released in 2026-11-11. Hr-relay is a simple workaround for this: it connects to the armband, ignoring the bug like the old Google Chrome, and re-emit it as a cleaned Bluetooh protocol that the new Chrome can use as it if was a proper armband. This can help other heart monitoring devices that may have a similar bug, and other browsers based on Chrome: Edge, Opera, Vivaldi, Samsung...
+<img src="docs/banner-full-small.jpeg">
+I have an heart monitoring armband by COROS, that use via a simple html connecting to it via Google Chrome bluetooth BLE layer. But the armband had a bug that was ignored by Google Chrome up to now, but is not blocking with its version 157 released in 2026-11-11. Hr-relay is a simple workaround for this: it connects to the armband, ignoring the bug like the old Google Chrome, and re-emit it as a cleaned Bluetooh protocol that the new Chrome can use as it if was a proper armband. This can help other heart monitoring devices that may have a similar bug, and other browsers based on Chrome: Edge, Opera, Vivaldi, Samsung...
 
 A tiny BLE heart-rate relay in Go. It connects to a Bluetooth heart-rate
 monitor (chest strap, armband, watch) over a clean BlueZ stack and
