@@ -124,6 +124,12 @@ away from a direct connection mid-workout. So run **either** the relay **or** a
 direct app-to-strap connection, never both. That is why the service ships
 disabled; start it only when the direct path is broken.
 
+## AI Co-Design Disclosure
+
+![Co-Designed with AI](https://img.shields.io/badge/Co--Designed%20with-AI-blueviolet?style=flat-square&logo=openai)
+
+This repository is developed by me, a human hobbyist in my personal time in close collaboration with various AI programming assistants. System architecture, logic design, and final reviews are handled by me, while code scaffolding, repetitive tasks, and standard styling are co-piloted by AI. AI contributions are commited under their model name, and can be quite verbose for tracability.
+
 ## License
 
 MIT License - (c) 2026 Colas Nahaboo.
