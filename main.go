@@ -244,16 +244,30 @@ func main() {
 	// Must be set before startAdvertising: the BlueZ backend only starts its
 	// D-Bus signal loop when a handler is already registered, so without this
 	// the relay is blind to the phone connecting or dropping.
+	//
+	// BlueZ also fires Connected=false property changes for devices merely
+	// discovered while scanning, so only a drop of a client we saw connect is
+	// a real disconnect.
+	var clientMu sync.Mutex
+	clients := map[string]bool{}
 	adapter.SetConnectionStateHandler(func(dev bluetooth.Device, state bluetooth.ConnectionState) {
+		addr := dev.Address.String()
+		clientMu.Lock()
+		defer clientMu.Unlock()
 		if state.Connected {
-			log.Printf("client connected: %s", dev.Address.String())
-		} else {
-			why := "dropped"
-			if state.Err != nil {
-				why = state.Err.Error()
-			}
-			log.Printf("client %s: %s", why, dev.Address.String())
+			clients[addr] = true
+			log.Printf("client connected: %s", addr)
+			return
 		}
+		if !clients[addr] {
+			return
+		}
+		delete(clients, addr)
+		why := "disconnected"
+		if state.Err != nil {
+			why = state.Err.Error()
+		}
+		log.Printf("client disconnected: %s (%s)", addr, why)
 	})
 
 	r.startAdvertising()
