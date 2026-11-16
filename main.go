@@ -240,6 +240,22 @@ func main() {
 	must("enable BLE stack", adapter.Enable())
 
 	r := &relay{lastBeat: time.Now()}
+
+	// Must be set before startAdvertising: the BlueZ backend only starts its
+	// D-Bus signal loop when a handler is already registered, so without this
+	// the relay is blind to the phone connecting or dropping.
+	adapter.SetConnectionStateHandler(func(dev bluetooth.Device, state bluetooth.ConnectionState) {
+		if state.Connected {
+			log.Printf("client connected: %s", dev.Address.String())
+		} else {
+			why := "dropped"
+			if state.Err != nil {
+				why = state.Err.Error()
+			}
+			log.Printf("client %s: %s", why, dev.Address.String())
+		}
+	})
+
 	r.startAdvertising()
 	r.startPeripheral()
 
