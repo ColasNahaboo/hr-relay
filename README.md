@@ -100,6 +100,82 @@ It needs no login session to stay up (systemd user lingering), and it survives
 the strap sleeping: it keeps advertising and re-acquires the strap whenever it
 wakes up.
 
+### Surviving suspend/resume
+
+If the relay host suspends (laptop lid, idle suspend), the BLE controller
+power-cycles and the kernel silently kills the advertisement
+(`Bluetooth: hci0: Unexpected advertising set terminated event`). The process
+keeps running and its central side (scan/connect to the strap) recovers by
+itself, but the peripheral side never re-advertises: the relay stays invisible
+in the phone's device chooser even though everything looks "up".
+
+The relay does not detect this itself, so pair it with a tiny resume watcher:
+a systemd user service that listens for logind's resume signal
+(`PrepareForSleep(false)`) and restarts the relay.
+
+`~/.local/bin/hr-relay-resume-watch` (executable):
+
+```bash
+#!/usr/bin/env bash
+# Watch logind for resume (PrepareForSleep(false)) and restart the BLE relay,
+# whose advertisement dies silently across suspend/resume.
+set -euo pipefail
+
+SERVICE="${1:-hr-relay.service}"
+
+watch_loop() {
+    local awaiting=0
+    stdbuf -oL dbus-monitor --system \
+        "type='signal',interface='org.freedesktop.login1.Manager',member='PrepareForSleep'" 2>/dev/null |
+        while IFS= read -r line; do
+            if [[ "$line" == *"member=PrepareForSleep"* ]]; then
+                awaiting=1
+                continue
+            fi
+            if (( awaiting )) && [[ "$line" == *"boolean false"* ]]; then
+                awaiting=0
+                logger -t hr-relay-resume-watch "resume detected, restarting $SERVICE"
+                systemctl --user restart "$SERVICE"
+            fi
+        done
+}
+
+while true; do
+    watch_loop
+    sleep 2
+done
+```
+
+`~/.config/systemd/user/hr-relay-resume-watch.service`:
+
+```ini
+[Unit]
+Description=BLE relay resume watcher (advertising dies across suspend)
+After=hr-relay.service
+
+[Service]
+ExecStart=/home/YOU/.local/bin/hr-relay-resume-watch hr-relay.service
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target
+```
+
+Then:
+
+    systemctl --user daemon-reload
+    systemctl --user enable --now hr-relay-resume-watch
+
+You can verify it without suspending, by simulating the resume signal (it just
+restarts the relay):
+
+    dbus-send --system --type=signal /org/freedesktop/login1 \
+        org.freedesktop.login1.Manager.PrepareForSleep boolean:false
+
+(`gdbus monitor` does not see this signal for unprivileged users; `dbus-monitor`
+in its fallback eavesdrop mode does.)
+
 ## Why it fixes the buggy-device case
 
 Some straps stream notifications on vendor-service characteristics the phone
